@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIC Attendance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1 {
+            font-size: 32px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        #datetime, #location {
+            font-size: 20px;
+            margin-top: 10px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+        #location {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>MIC Attendance</h1>
+<div id="datetime">Loading date and time...</div>
+<div id="location">Fetching location...</div>
+
+<script>
+    function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString(); // Get current date
+        const time = now.toLocaleTimeString(); // Get current time
+        document.getElementById('datetime').textContent = `Date: ${date} | Time: ${time}`;
+    }
+
+    function showPosition(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        // Fetch location name using Nominatim API
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+            .then(response => response.json())
+            .then(data => {
+                const locationName = data.display_name || "Location name not available";
+                document.getElementById('location').textContent = `Location: ${locationName}`;
+            })
+            .catch(error => {
+                console.error('Error fetching location name:', error);
+                document.getElementById('location').textContent = "Unable to fetch location name.";
+            });
+    }
+
+    function showError(error) {
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                document.getElementById('location').textContent = "User denied the request for Geolocation.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                document.getElementById('location').textContent = "Location information is unavailable.";
+                break;
+            case error.TIMEOUT:
+                document.getElementById('location').textContent = "The request to get user location timed out.";
+                break;
+            case error.UNKNOWN_ERROR:
+                document.getElementById('location').textContent = "An unknown error occurred.";
+                break;
+        }
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            document.getElementById('location').textContent = "Geolocation is not supported by this browser.";
+        }
+    }
+
+    // Update the date and time every second
+    setInterval(updateDateTime, 1000);
+
+    // Initial call to display date and time and fetch location immediately on load
+    updateDateTime();
+    getLocation();
+</script>
+
+</body>
+</html>
